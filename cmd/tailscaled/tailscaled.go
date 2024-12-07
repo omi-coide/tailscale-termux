@@ -28,6 +28,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/wlynxg/anet"
 	"tailscale.com/cmd/tailscaled/childproc"
 	"tailscale.com/control/controlclient"
 	"tailscale.com/envknob"
@@ -457,7 +458,9 @@ func run() (err error) {
 			return fmt.Errorf("error reading config file: %w", err)
 		}
 	}
-
+	if version.IsMobile() {
+		netmon.RegisterInterfaceGetter(wrapToNetmonIfaces)
+	}
 	var netMon *netmon.Monitor
 	isWinSvc := isWindowsService()
 	if !isWinSvc {
@@ -1038,4 +1041,28 @@ func canEncryptState() error {
 	}
 
 	return nil
+}
+
+func wrapToNetmonIfaces() ([]netmon.Interface, error) {
+	var ifaces, e = anet.Interfaces()
+	if e != nil {
+		return nil, e
+	}
+	var ret []netmon.Interface = make([]netmon.Interface, len(ifaces))
+
+	for i, v := range ifaces {
+		var addr, e2 = anet.InterfaceAddrsByInterface(&v)
+		if e2 != nil {
+			addr = nil
+			// Actually this would fail
+			// AltAddrs MUST be set on Android, if AltAddrs is nil, net.Interface.Addrs() would be used causing permission denial.
+			// See (netmon.Interface).Addrs
+		}
+		ret[i] = netmon.Interface{
+			Interface: &ifaces[i],
+			AltAddrs:  addr,
+			Desc:      "",
+		}
+	}
+	return ret, e
 }
