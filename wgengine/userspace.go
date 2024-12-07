@@ -20,7 +20,6 @@ import (
 
 	"github.com/tailscale/wireguard-go/device"
 	"github.com/tailscale/wireguard-go/tun"
-	"github.com/wlynxg/anet"
 	"tailscale.com/control/controlknobs"
 	"tailscale.com/drive"
 	"tailscale.com/envknob"
@@ -322,7 +321,6 @@ func NewUserspaceEngine(logf logger.Logf, conf Config) (_ Engine, reterr error) 
 		// On iOS, the VPNExtension is limited to only 50 MB of memory, so
 		// keeping the number of routes down helps with memory consumption.
 		rtr = router.ConsolidatingRoutes(logf, rtr)
-		netmon.RegisterInterfaceGetter(wrapToNetmonIfaces)
 		// TO BE FIXED
 	}
 
@@ -1607,28 +1605,4 @@ func (e *userspaceEngine) reconfigureVPNIfNecessary() error {
 		return nil
 	}
 	return e.reconfigureVPN()
-}
-
-func wrapToNetmonIfaces() ([]netmon.Interface, error) {
-	var ifaces, e = anet.Interfaces()
-	if e != nil {
-		return nil, e
-	}
-	var ret []netmon.Interface = make([]netmon.Interface, len(ifaces))
-
-	for i, v := range ifaces {
-		var addr, e2 = anet.InterfaceAddrsByInterface(&v)
-		if e2 != nil {
-			addr = nil
-			// Actually this would fail
-			// AltAddrs MUST be set on Android, if AltAddrs is nil, net.Interface.Addrs() would be used causing permission denial.
-			// See (netmon.Interface).Addrs
-		}
-		ret[i] = netmon.Interface{
-			Interface: &ifaces[i],
-			AltAddrs:  addr,
-			Desc:      "",
-		}
-	}
-	return ret, e
 }
