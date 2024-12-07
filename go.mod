@@ -377,6 +377,7 @@ require (
 	github.com/ultraware/whitespace v0.1.0 // indirect
 	github.com/uudashr/gocognit v1.1.2 // indirect
 	github.com/vbatts/tar-split v0.11.6 // indirect
+	github.com/wlynxg/anet v0.0.5
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/yagipy/maintidx v1.0.0 // indirect
